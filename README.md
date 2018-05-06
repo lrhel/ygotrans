@@ -8,14 +8,14 @@ Then the script will create a file missing_translation.txt which hold the passco
 
 ./ygotrans.py [OPTION]... [CDB] [LANG]
 
-  OPTION:
-    -h, --help  show this help message and exit
-    -y, --yugipedia Use Yugipedia instead of Wikia
+* OPTION:
+    * -h, --help  show this help message and exit
+    * -y, --yugipedia Use Yugipedia instead of Wikia
     
-  CDB:
-    The path to the CDB file
+* CDB:
+    * The path to the CDB file
     
-  LANG:
+* LANG:
     * fr
     * de
     * it
