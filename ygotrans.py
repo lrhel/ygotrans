@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
 YGOPro CDB's translator script
@@ -116,8 +116,6 @@ def main():
     prog.update()
     prog2.update()
     i = 0
-    file = open('missing_translation.txt', 'w')
-    file.close()
     for row in req:
         i += 1
         prog.set_stat(i)
