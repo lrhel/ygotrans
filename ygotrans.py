@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 def argparser():
     parser = argparse.ArgumentParser(prog = "YGOTrans", description = "YGOTrans aim to translate automatically CDB files from YGOPRO")
     parser.add_argument("cdb", help="The cdb file to process")
-    parser.add_argument("lang", help="de, fr, pt, es, it")
+    parser.add_argument("lang", help="en, de, fr, pt, es, it")
     parser.add_argument("--yugipedia", "-y", action="store_true", help = "Use Yugipedia instead of Wikia")
     args = parser.parse_args()
     return args
@@ -75,30 +75,42 @@ def get_info(id, page, args):
     else:
         soup = BeautifulSoup(page.text, "lxml")
         if args.yugipedia:
-            spans = soup.find_all('td', attrs={'lang':args.lang})
-            if len(spans) == 0:
-                missing(id)
-                return None
-            name = str(spans[0].text)
-            description = str(spans[1].text)
-            if is_pendulum(id, args.cdb):
-                description += str(spans[2].text)
-            name = remove_accents(name).encode("utf-8")
+            if args.lang == 'en':
+                lore = soup.find_all('div', attrs={'class':'lore'})
+                description = str(lore[0].text)
+                heading = soup.find_all('div', attrs={'class':'heading'})
+                name = str(heading[0].text)
+            else:
+                spans = soup.find_all('td', attrs={'lang':args.lang})
+                if len(spans) == 0:
+                    missing(id)
+                    return None
+                name = str(spans[0].text)
+                description = str(spans[1].text)
+                if is_pendulum(id, args.cdb):
+                    description += str(spans[2].text)
+                name = remove_accents(name).encode("utf-8")
             description = remove_accents(description).encode("utf-8")
             return {'name': name, 'description': description}
         else:
-            spans = soup.find_all('span', attrs={'lang':args.lang})
-            name = str(spans[0].text)
-            if len(spans) == 2:
-                description = str(spans[1].text)
-            elif len(spans) == 5:
-                description = str(spans[1].text) + str(": ")#penduleffect
-                description += str(spans[2].text) + str('\n\n')
-                description += str(spans[3].text) + str(": ")#monstereffect
-                description += str(spans[4].text)
+            if args.lang == 'en':
+                spans = soup.find_all('td', attrs={'class':'navbox-list'})
+                description = str(spans[0].text)
+                spans = soup.find_all('td', attrs={'class':'cardtablerowdata'})
+                name = str(spans[0].text)
             else:
-                missing(id)
-                return None
+                spans = soup.find_all('span', attrs={'lang':args.lang})
+                name = str(spans[0].text)
+                if len(spans) == 2:
+                    description = str(spans[1].text)
+                elif len(spans) == 5:
+                    description = str(spans[1].text) + str(": ")#penduleffect
+                    description += str(spans[2].text) + str('\n\n')
+                    description += str(spans[3].text) + str(": ")#monstereffect
+                    description += str(spans[4].text)
+                else:
+                    missing(id)
+                    return None
             name = remove_accents(name).encode("utf-8")
             description = remove_accents(description).encode("utf-8")
             return {'name': name, 'description': description}
@@ -126,6 +138,7 @@ def main():
         page = search_card(id, args.yugipedia)
         info = get_info(id, page, args)
         if info is not None:
+            print(info)
             cursor.execute("UPDATE texts SET name = (?), desc = (?) WHERE id = (?)", (info['name'], info['description'], row[0]))
             con.commit()
     time_elapsed = int(time.time()) - time_elapsed
