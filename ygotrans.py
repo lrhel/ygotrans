@@ -70,7 +70,6 @@ def missing(id):
 
 def get_info(id, page, args):
     if page.status_code != 200:
-        missing(id)
         return None
     else:
         soup = BeautifulSoup(page.text, "lxml")
@@ -83,7 +82,6 @@ def get_info(id, page, args):
             else:
                 spans = soup.find_all('td', attrs={'lang':args.lang})
                 if len(spans) == 0:
-                    missing(id)
                     return None
                 name = str(spans[0].text)
                 description = str(spans[1].text)
@@ -100,6 +98,8 @@ def get_info(id, page, args):
                 name = str(spans[0].text)
             else:
                 spans = soup.find_all('span', attrs={'lang':args.lang})
+                if len(spans) == 0:
+                    return None
                 name = str(spans[0].text)
                 if len(spans) == 2:
                     description = str(spans[1].text)
@@ -109,7 +109,6 @@ def get_info(id, page, args):
                     description += str(spans[3].text) + str(": ")#monstereffect
                     description += str(spans[4].text)
                 else:
-                    missing(id)
                     return None
             name = remove_accents(name).encode("utf-8")
             description = remove_accents(description).encode("utf-8")
@@ -141,6 +140,8 @@ def main():
             print(info)
             cursor.execute("UPDATE texts SET name = (?), desc = (?) WHERE id = (?)", (info['name'], info['description'], row[0]))
             con.commit()
+        else:
+            missing(id)
     time_elapsed = int(time.time()) - time_elapsed
     print()
     print("Script ended in: " + str(time_elapsed))
